@@ -6,6 +6,8 @@ import passport from "passport";
 import './src/config/passport.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors'; 
+import swaggerDocs from './src/config/swagger.js';
+import vacancyrouter from './src/routers/vacancyRouter.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +28,10 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', router);
+app.use('/api/vacancy',vacancyrouter)
+swaggerDocs(app);
+
+
 
 app.listen(PORT, () => {
     console.log(`Server is running http://localhost:${PORT}`);
