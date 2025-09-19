@@ -11,10 +11,58 @@ import passport from "passport";
 import jwt from "jsonwebtoken";
 import express from "express";
 
-import authMiddleware from "../middleware/authMiddleware.js"; // authMiddleware-i import et
+import authMiddleware from "../middleware/authMiddleware.js"; 
 
 const router = express.Router();
-
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Yeni istifadəçi qeydiyyatı
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - email
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: arzu
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: arzu@example.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: myStrongPassword123@
+ *     responses:
+ *       201:
+ *         description: User created. Email verification sent.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "User created. Please verify your email"
+ *       400:
+ *         description: Validation error or user already exists
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "User already exists"
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Server error"
+ */
 router.post("/register", register);
 router.get("/verify-email", verifyEmail);
 router.post("/login", login);
@@ -40,7 +88,7 @@ router.get(
 // Google callback route
 router.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }),
+  passport.authenticate("google", { failureRedirect: "/login" ,session:false}),
   (req, res) => {
     const token = jwt.sign(
       { id: req.user._id, email: req.user.email, role: req.user.role },

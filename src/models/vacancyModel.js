@@ -19,6 +19,11 @@ const VacancySchema = new mongoose.Schema(
       type: Date, // tarix backend-dən gələcək
       default: Date.now,
     },
+    deadline:{
+      type: Date,
+      required: false,
+
+    },
     location: {
       type: String,
       required: true,

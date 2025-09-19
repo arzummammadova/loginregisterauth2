@@ -38,16 +38,26 @@ export const register = async (req, res) => {
     await user.save();
     const verifyURL = `${process.env.SERVER_URL}/api/auth/verify-email?token=${emailToken}&id=${user._id}`;
     await transporter.sendMail({
-      from: `Real Time Chat <${process.env.EMAIL_USER}>`,
+      from: `Voluntern.az <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: "E‑poçtunuzu təsdiqləyin",
-      html: ` <div style="font-family: Arial, sans-serif; padding: 20px;">
-      <h2>Salam, ${user.username}!</h2>
-      <p>Real Time Chat platformasına xoş gəlmisiniz. Zəhmət olmasa, hesabınızı təsdiqləmək üçün aşağıdakı düyməyə klikləyin:</p>
-      <a href="${verifyURL}" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Hesabı təsdiqlə</a>
-      <p style="margin-top: 20px;">Əgər bu e-poçtu siz göndərməmisinizsə, bu mesajı nəzərə almayın.</p>
-      <p>Hörmətlə,<br/>Real Time Chat by Arzuui</p>
-    </div>`,
+      html: `  <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; border-radius: 10px;">
+    <h2 style="color: #7101E3;">Salam, ${user.username}!</h2>
+    <p style="color: #333; font-size: 16px;">
+      Voluntern.az platformasına xoş gəlmisiniz! Burada gənclər könüllü və təcrübə proqramlarını tapa, tədbirlərə və vebinarlara qoşula bilərlər.
+    </p>
+    <a href="${verifyURL}" 
+       style="display: inline-block; padding: 12px 25px; background-color: #7B66FF; color: white; text-decoration: none; border-radius: 6px; margin-top: 15px; font-weight: bold;">
+      Hesabı təsdiqlə
+    </a>
+    <p style="margin-top: 20px; color: #555;">
+      Əgər bu e‑poçtu siz göndərməmisinizsə, onu nəzərə almayın.
+    </p>
+    <p style="margin-top: 15px; color: #333;">
+      Hörmətlə,<br/>
+      Voluntern.az Team
+    </p>
+  </div>`,
     });
 
     return res
@@ -373,7 +383,7 @@ export const forgotPassword = async (req, res) => {
 
     // Mail göndər
     await transporter.sendMail({
-      from: `Real Time Chat <${process.env.EMAIL_USER}>`,
+      from: `Voluntern.az <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: "Şifrə yeniləmə linki",
       html: `

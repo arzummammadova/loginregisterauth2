@@ -5,27 +5,17 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Auth API",
+      title: "Voluntern API",
       version: "1.0.0",
-      description: "Authentication API docs",
+      description: "Gençlər və könüllülər üçün vakansiya API",
     },
     servers: [
-      {
-        url: "http://localhost:5000/api",
-      },
+      { url: "http://localhost:5000/api" }
     ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
-      },
-    },
   },
-  apis: ["../routes/*.js"], // 👈 BURANI DƏYİŞ
+  apis: ["./src/routers/*.js"], // ✅ tam path
 };
+
 
 const swaggerSpec = swaggerJsdoc(options);
 
