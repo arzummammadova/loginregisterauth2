@@ -186,6 +186,7 @@ export const verifyEmail = async (req, res) => {
 // };
 
 
+
 export const login = async (req, res) => {
   try {
     const { error } = loginValidation.validate(req.body);
@@ -267,7 +268,7 @@ export const login = async (req, res) => {
 
       await foundUser.save();
 
-      return res.status(400).json({ message: "Şifrə yanlışdır" });
+      return res.status(400).json({ message: "Məlumatlar yalnışdır" });
     }
 
     // Uğurlu login olduqda cəhd sayını sıfırla, lockUntil-u null et

@@ -65,6 +65,93 @@ const router = express.Router();
  */
 router.post("/register", register);
 router.get("/verify-email", verifyEmail);
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: User login
+ *     description: Authenticate a user with username/email and password. Handles Google accounts without passwords and account lock logic.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - user
+ *               - password
+ *             properties:
+ *               user:
+ *                 type: string
+ *                 description: Username or email
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 description: User password
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Login successful
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: 64f8e1d3c2b3a4567d8f9e12
+ *                     username:
+ *                       type: string
+ *                       example: john_doe
+ *                     email:
+ *                       type: string
+ *                       example: user@example.com
+ *                     role:
+ *                       type: string
+ *                       example: user
+ *       400:
+ *         description: Validation error or incorrect credentials / Google account without password
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: İstifadəçi tapılmadı
+ *       403:
+ *         description: Account temporarily locked
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Hesabınız müvəqqəti bloklanıb. Zəhmət olmasa 15 dəqiqə sonra yenidən cəhd edin.
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server xətası
+ *                 error:
+ *                   type: string
+ *                   example: Error details
+ */
+
 router.post("/login", login);
 router.post("/logout", logout);
 
