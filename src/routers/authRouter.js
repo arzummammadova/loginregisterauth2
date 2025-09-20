@@ -159,7 +159,6 @@ router.post("/logout", logout);
 router.get("/me", authMiddleware, (req, res) => {
     // authMiddleware-i keçdikdən sonra req.user obyekti mövcud olacaq
     return res.status(200).json({
-      message: "Authorized",
       user: req.user,
     });
 });
