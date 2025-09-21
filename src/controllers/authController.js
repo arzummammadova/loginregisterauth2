@@ -297,12 +297,19 @@ export const login = async (req, res) => {
     //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
     // });
     
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === "production", // istehsalda true, inkişafda false
+    //   sameSite: "strict", // daha sərt təhlükəsizlik üçün
+    //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
+    // });
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // istehsalda true, inkişafda false
-      sameSite: "strict", // daha sərt təhlükəsizlik üçün
+      secure: true,       // HTTPS olmalıdır (hər iki domain HTTPS-dir)
+      sameSite: "none",   // cross-site cookie üçün mütləq
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
     });
+    
     
 
     return res.status(200).json({

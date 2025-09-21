@@ -18,6 +18,7 @@ app.use(cors({
   origin: CLIENT_URL, // Yalnız bu URL-dən gələn sorğulara icazə ver
   credentials: true, // Sorğularla birlikdə çerezlərin (cookies) göndərilməsinə icazə ver
 }));
+app.set("trust proxy", 1); // production üçün
 
 app.use(express.json());
 app.use(passport.initialize());
