@@ -154,7 +154,14 @@ router.get("/verify-email", verifyEmail);
 
 router.post("/login", login);
 router.post("/logout", logout);
+const debugCookies = (req, res, next) => {
+  console.log('🍪 Cookies received:', req.cookies);
+  console.log('📱 User-Agent:', req.headers['user-agent']);
+  console.log('🌍 Origin:', req.headers.origin);
+  next();
+};
 
+router.use('/me', debugCookies);
 // Yeni 'me' endpointi
 router.get("/me", authMiddleware, (req, res) => {
     // authMiddleware-i keçdikdən sonra req.user obyekti mövcud olacaq
@@ -199,4 +206,6 @@ router.post("/set-password", setPassword);
 
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
+
+
 export default router;

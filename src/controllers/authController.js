@@ -303,15 +303,22 @@ export const login = async (req, res) => {
     //   sameSite: "strict", // daha sərt təhlükəsizlik üçün
     //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
     // });
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: true,       // HTTPS olmalıdır (hər iki domain HTTPS-dir)
+    //   sameSite: "none",   // cross-site cookie üçün mütləq
+    //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
+    // });
+    
+    
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,       // HTTPS olmalıdır (hər iki domain HTTPS-dir)
-      sameSite: "none",   // cross-site cookie üçün mütləq
+      secure: process.env.NODE_ENV === "production", // HTTPS-də true
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // prod-da 'none', dev-də 'lax'
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
+      path: "/", // path əlavə et
     });
     
-    
-
     return res.status(200).json({
       message: "Login successful",
       user: {
@@ -327,19 +334,37 @@ export const login = async (req, res) => {
   }
 };
 
+// export const logout = async (req, res) => {
+//   try {
+//     // Çərəzdən tokeni silin
+//     // res.clearCookie("token", {
+//     //   httpOnly: true,
+//     //   secure: process.env.NODE_ENV === "production",
+//     //   sameSite: "strict",
+//     // });
+//     res.cookie("token", token, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === "production", // devdə false, prod-da true
+//       sameSite: "none",  // fərqli domen üçün mütləq
+//       maxAge: 7 * 24 * 60 * 60 * 1000,
+//     });
+    
+//     return res.status(200).json({ message: "Logout successful" });
+//   } catch (error) {
+//     return res
+//       .status(500)
+//       .json({ message: "Server xətası", error: error.message });
+//   }
+// };
 export const logout = async (req, res) => {
   try {
-    // Çərəzdən tokeni silin
-    // res.clearCookie("token", {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === "production",
-    //   sameSite: "strict",
-    // });
-    res.cookie("token", token, {
+    // Cookie'ni sil - production və development üçün eyni ayarlar
+    res.clearCookie("token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // devdə false, prod-da true
-      sameSite: "none",  // fərqli domen üçün mütləq
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production", // prod-da true, dev-də false
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // cross-domain üçün
+      path: "/", // path əlavə et
+      domain: process.env.NODE_ENV === "production" ? undefined : undefined // domain ayarı
     });
     
     return res.status(200).json({ message: "Logout successful" });
@@ -349,7 +374,6 @@ export const logout = async (req, res) => {
       .json({ message: "Server xətası", error: error.message });
   }
 };
-
 
 export const setPassword = async (req, res) => {
   try {

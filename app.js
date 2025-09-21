@@ -19,16 +19,43 @@ const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:3000"];
 //   origin: CLIENT_URL, // Yalnız bu URL-dən gələn sorğulara icazə ver
 //   credentials: true, // Sorğularla birlikdə çerezlərin (cookies) göndərilməsinə icazə ver
 // }));
-app.use(cors({
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   credentials: true,
+// }));
+
+
+const corsOptions = {
   origin: function (origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:3000', 
+      'http://localhost:3001',
+      process.env.CLIENT_URL
+    ].filter(Boolean); // undefined olanları çıxar
+
+    // Development-də origin yoxlamaqı atla (Postman, mobile app üçün)
+    if (process.env.NODE_ENV !== 'production' && !origin) {
+      return callback(null, true);
+    }
+
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true,
-}));
+  credentials: true, // Cookie göndərmək üçün
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  optionsSuccessStatus: 200 // IE11 dəstəyi üçün
+};
+
 app.set("trust proxy", 1); // production üçün
 
 app.use(express.json());
