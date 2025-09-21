@@ -36,6 +36,7 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:3000', 
       'http://localhost:3001',
+      'https://voluntern.onrender.com',
       process.env.CLIENT_URL
     ].filter(Boolean);
 
