@@ -36,7 +36,7 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:3000', 
       'http://localhost:3001',
-      'https://voluntern.onrender.com',
+      'https://volunternaz.vercel.app',
       process.env.CLIENT_URL
     ].filter(Boolean);
 
