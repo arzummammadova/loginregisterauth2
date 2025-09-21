@@ -282,6 +282,11 @@ export const login = async (req, res) => {
         .json({ message: "Zəhmət olmasa emailinizi təsdiqləyin" });
     }
 
+    // const token = jwt.sign(
+    //   { id: foundUser._id, email: foundUser.email, role: foundUser.role },
+    //   process.env.JWT_SECRET,
+    //   { expiresIn: "7d" }
+    // );
     const token = jwt.sign(
       { id: foundUser._id, email: foundUser.email, role: foundUser.role },
       process.env.JWT_SECRET,
@@ -311,14 +316,43 @@ export const login = async (req, res) => {
     // });
     
     
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // HTTPS-də true
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // prod-da 'none', dev-də 'lax'
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
-      path: "/", // path əlavə et
-    });
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === "production", // HTTPS-də true
+    //   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // prod-da 'none', dev-də 'lax'
+    //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
+    //   path: "/", // path əlavə et
+    // });
     
+    const userAgent = req.headers['user-agent'] || '';
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+    const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+    
+    console.log('Device detection:', { isIOS, isSafari, userAgent: userAgent.substring(0, 50) });
+
+    // iOS Safari üçün xüsusi cookie ayarları
+    if (isIOS || isSafari) {
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: true, // iOS-da həmişə true olmalıdır
+        sameSite: "none", // iOS-da cross-site üçün mütləq
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: "/",
+        // iOS üçün əlavə headers
+      });
+      
+      // iOS üçün əlavə header
+      res.header('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${7 * 24 * 60 * 60}`);
+    } else {
+      // Android və digər browser-lər üçün
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: "/",
+      });
+    }
     return res.status(200).json({
       message: "Login successful",
       user: {
@@ -327,7 +361,13 @@ export const login = async (req, res) => {
         email: foundUser.email,
         role: foundUser.role,
       },
+      debug: process.env.NODE_ENV !== 'production' ? {
+        isIOS,
+        isSafari,
+        cookieSet: true
+      } : undefined
     });
+    
     
   } catch (error) {
     return res.status(500).json({ message: "Server xətası", error: error.message });

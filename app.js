@@ -58,6 +58,23 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 
+const iosMiddleware = (req, res, next) => {
+  const userAgent = req.headers['user-agent'] || '';
+  const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+  
+  if (isIOS) {
+    // iOS üçün əlavə headers
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie');
+    res.header('Access-Control-Expose-Headers', 'Set-Cookie');
+  }
+  
+  next();
+};
+
+// server.js-də CORS-dan sonra əlavə edin
+app.use(iosMiddleware);
+
 app.set("trust proxy", 1); // production üçün
 
 app.use(express.json());
