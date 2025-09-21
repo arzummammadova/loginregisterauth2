@@ -37,9 +37,8 @@ const corsOptions = {
       'http://localhost:3000', 
       'http://localhost:3001',
       process.env.CLIENT_URL
-    ].filter(Boolean); // undefined olanları çıxar
+    ].filter(Boolean);
 
-    // Development-də origin yoxlamaqı atla (Postman, mobile app üçün)
     if (process.env.NODE_ENV !== 'production' && !origin) {
       return callback(null, true);
     }
@@ -47,14 +46,16 @@ const corsOptions = {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error("Not allowed by CORS"));
+      callback(new Error(`CORS Error: Origin ${origin} not allowed`));
     }
   },
-  credentials: true, // Cookie göndərmək üçün
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  optionsSuccessStatus: 200 // IE11 dəstəyi üçün
+  optionsSuccessStatus: 200
 };
+app.use(cors(corsOptions));
+
 
 app.set("trust proxy", 1); // production üçün
 
