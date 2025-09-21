@@ -290,19 +290,19 @@ export const login = async (req, res) => {
     
 
     // Token cookie-də saxla
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: false, // development zamanı false
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
-    });
-    
     // res.cookie("token", token, {
     //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === "production", // istehsalda true, inkişafda false
-    //   sameSite: "strict", // daha sərt təhlükəsizlik üçün
+    //   secure: false, // development zamanı false
+    //   sameSite: "lax",
     //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
     // });
+    
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // istehsalda true, inkişafda false
+      sameSite: "strict", // daha sərt təhlükəsizlik üçün
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
+    });
     
 
     return res.status(200).json({
