@@ -205,7 +205,56 @@ router.post("/set-password", setPassword);
 
 
 router.post("/forgot-password", forgotPassword);
-router.post("/reset-password", resetPassword);
+// router.post("/reset-password", resetPassword);
+router.post("/reset-password/:id/:token", resetPassword);
 
+
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: İstifadəçi şifrəsini yeniləyir
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - id
+ *               - token
+ *               - password
+ *             properties:
+ *               id:
+ *                 type: string
+ *                 example: 64f8e1d3c2b3a4567d8f9e12
+ *               token:
+ *                 type: string
+ *                 example: 123456abcdef
+ *               password:
+ *                 type: string
+ *                 example: NewStrongPassword123!
+ *     responses:
+ *       200:
+ *         description: Şifrə uğurla yeniləndi
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Şifrə uğurla yeniləndi"
+ *       400:
+ *         description: Token etibarsızdır və ya vaxtı keçib
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Token etibarsızdır və ya vaxtı keçib"
+ *       500:
+ *         description: Server xətası
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Server xətası"
+ */
 
 export default router;

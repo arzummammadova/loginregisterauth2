@@ -93,98 +93,6 @@ export const verifyEmail = async (req, res) => {
     return res.status(500).json({ message: "Server error", error });
   }
 };
-// export const login = async (req, res) => {
-//   try {
-//     const { error } = loginValidation.validate(req.body);
-//     if (error) {
-//       return res.status(400).json({ message: error.details[0].message });
-//     }
-
-//     const { user, password } = req.body;
-
-//     if (!user || !password) {
-//       return res
-//         .status(400)
-//         .json({ message: "İstifadəçi adı/email və şifrə tələb olunur" });
-//     }
-
-//     const foundUser = await User.findOne({
-//       $or: [{ email: user.toLowerCase() }, { username: user }],
-//     });
-
-//     if (!foundUser) {
-//       return res.status(400).json({ message: "İstifadəçi tapılmadı" });
-//     }
-//     if (!foundUser.password) {
-//       // Reset token yarat
-//       const resetToken = crypto.randomBytes(32).toString("hex");
-//       foundUser.resetPasswordToken = resetToken;
-//       foundUser.resetPasswordExpires = Date.now() + 1000 * 60 * 15; // 15 dəqiqəlik
-//       await foundUser.save();
-
-//       // Link
-//       const resetURL = `${process.env.CLIENT_URL}/set-password?token=${resetToken}&id=${foundUser._id}`;
-
-//       // Mail göndər
-//       await transporter.sendMail({
-//         from: `Real Time Chat <${process.env.EMAIL_USER}>`,
-//         to: foundUser.email,
-//         subject: "Şifrə təyin et",
-//         html: `
-//       <p>Salam, ${foundUser.username}!</p>
-//       <p>Google ilə yaratdığınız hesaba şifrə təyin etmək üçün aşağıdakı linkə klikləyin:</p>
-//       <a href="${resetURL}">Şifrə təyin et</a>
-//       <p>Link 15 dəqiqə ərzində etibarlıdır.</p>
-//     `,
-//       });
-
-//       return res.status(400).json({
-//         message:
-//           "Bu hesab Google ilə yaradılıb. Emailinizə şifrə təyin etmə linki göndərildi.",
-//       });
-//     }
-
-//     const isPasswordValid = await bcrypt.compare(password, foundUser.password);
-//     if (!isPasswordValid) {
-//       return res.status(400).json({ message: "Şifrə yanlışdır" });
-//     }
-
-//     if (!foundUser.emailVerified) {
-//       return res
-//         .status(400)
-//         .json({ message: "Zəhmət olmasa emailinizi təsdiqləyin" });
-//     }
-
-//     const token = jwt.sign(
-//       { id: foundUser._id, email: foundUser.email, role: foundUser.role },
-//       process.env.JWT_SECRET,
-//       { expiresIn: "7d" }
-//     );
-
-//     // Token cookie-də saxla
-//     res.cookie("token", token, {
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === "production",
-//       sameSite: "strict",
-//       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
-//     });
-
-//     return res.status(200).json({
-//       message: "Login successful",
-//       user: {
-//         id: foundUser._id,
-//         username: foundUser.username,
-//         email: foundUser.email,
-//         role: foundUser.role,
-//       },
-//     });
-//   } catch (error) {
-//     return res
-//       .status(500)
-//       .json({ message: "Server xətası", error: error.message });
-//   }
-// };
-
 
 
 export const login = async (req, res) => {
@@ -373,29 +281,6 @@ export const login = async (req, res) => {
     return res.status(500).json({ message: "Server xətası", error: error.message });
   }
 };
-
-// export const logout = async (req, res) => {
-//   try {
-//     // Çərəzdən tokeni silin
-//     // res.clearCookie("token", {
-//     //   httpOnly: true,
-//     //   secure: process.env.NODE_ENV === "production",
-//     //   sameSite: "strict",
-//     // });
-//     res.cookie("token", token, {
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === "production", // devdə false, prod-da true
-//       sameSite: "none",  // fərqli domen üçün mütləq
-//       maxAge: 7 * 24 * 60 * 60 * 1000,
-//     });
-    
-//     return res.status(200).json({ message: "Logout successful" });
-//   } catch (error) {
-//     return res
-//       .status(500)
-//       .json({ message: "Server xətası", error: error.message });
-//   }
-// };
 export const logout = async (req, res) => {
   try {
     // Cookie'ni sil - production və development üçün eyni ayarlar
@@ -467,7 +352,8 @@ export const forgotPassword = async (req, res) => {
     await user.save();
 
     // Reset link
-    const resetURL = `${process.env.CLIENT_URL}/auth/reset-password?token=${resetToken}&id=${user._id}`;
+    const resetURL = `${process.env.CLIENT_URL}/auth/reset-password/${user._id}/${resetToken}`;
+
 
     // Mail göndər
     await transporter.sendMail({
@@ -491,37 +377,61 @@ export const forgotPassword = async (req, res) => {
       .json({ message: "Server xətası", error: error.message });
   }
 };
-
 export const resetPassword = async (req, res) => {
   try {
-    const { id, token, password } = req.body;
+    const { id, token } = req.params;   // URL-dən gəlir
+    const { password } = req.body;      // body-dən gəlir
 
-    if (!password) {
-      return res.status(400).json({ message: "Yeni şifrə tələb olunur" });
-    }
-
+    // token DB-də saxladığınla müqayisə olunmalıdır (jwt yox, crypto token)
     const user = await User.findOne({
       _id: id,
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }, // token hələ keçərli olmalıdır
+      resetPasswordExpires: { $gt: Date.now() }, // vaxtı keçməyib
     });
 
     if (!user) {
-      return res
-        .status(400)
-        .json({ message: "Token etibarsızdır və ya vaxtı keçib" });
+      return res.status(400).json({ message: "Token etibarsız və ya vaxtı bitib" });
     }
 
-    user.password = await bcrypt.hash(password, 10);
-    user.resetPasswordToken = null;
-    user.resetPasswordExpires = null;
+    // password hash
+    const hashed = await bcrypt.hash(password, 10);
+    user.password = hashed;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
 
     await user.save();
 
-    return res.status(200).json({ message: "Şifrə uğurla yeniləndi" });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Server xətası", error: error.message });
+    return res.json({ message: "Parol uğurla yeniləndi ✅" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Xəta baş verdi" });
   }
 };
+
+
+// export const resetPassword = async (req, res) => {
+//   try {
+//     const { id, token, password } = req.body;
+
+//     // token verify
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     if (decoded.id !== id) {
+//       return res.status(400).json({ message: "Token etibarsızdır" });
+//     }
+
+//     const user = await User.findById(id);
+//     if (!user) {
+//       return res.status(404).json({ message: "İstifadəçi tapılmadı" });
+//     }
+
+//     // password hash
+//     const hashed = await bcrypt.hash(password, 10);
+//     user.password = hashed;
+//     await user.save();
+
+//     return res.json({ message: "Parol uğurla yeniləndi ✅" });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Xəta baş verdi" });
+//   }
+// };
