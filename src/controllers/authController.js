@@ -200,7 +200,7 @@ export const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-    
+
 
     // Token cookie-də saxla
     // res.cookie("token", token, {
@@ -209,7 +209,7 @@ export const login = async (req, res) => {
     //   sameSite: "lax",
     //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
     // });
-    
+
     // res.cookie("token", token, {
     //   httpOnly: true,
     //   secure: process.env.NODE_ENV === "production", // istehsalda true, inkişafda false
@@ -222,8 +222,8 @@ export const login = async (req, res) => {
     //   sameSite: "none",   // cross-site cookie üçün mütləq
     //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
     // });
-    
-    
+
+
     // res.cookie("token", token, {
     //   httpOnly: true,
     //   secure: process.env.NODE_ENV === "production", // HTTPS-də true
@@ -231,11 +231,11 @@ export const login = async (req, res) => {
     //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
     //   path: "/", // path əlavə et
     // });
-    
+
     const userAgent = req.headers['user-agent'] || '';
     const isIOS = /iPad|iPhone|iPod/.test(userAgent);
     const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
-    
+
     console.log('Device detection:', { isIOS, isSafari, userAgent: userAgent.substring(0, 50) });
 
     // iOS Safari üçün xüsusi cookie ayarları
@@ -248,7 +248,7 @@ export const login = async (req, res) => {
         path: "/",
         // iOS üçün əlavə headers
       });
-      
+
       // iOS üçün əlavə header
       res.header('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${7 * 24 * 60 * 60}`);
     } else {
@@ -275,8 +275,8 @@ export const login = async (req, res) => {
         cookieSet: true
       } : undefined
     });
-    
-    
+
+
   } catch (error) {
     return res.status(500).json({ message: "Server xətası", error: error.message });
   }
@@ -291,7 +291,7 @@ export const logout = async (req, res) => {
       path: "/", // path əlavə et
       domain: process.env.NODE_ENV === "production" ? undefined : undefined // domain ayarı
     });
-    
+
     return res.status(200).json({ message: "Logout successful" });
   } catch (error) {
     return res
@@ -409,29 +409,3 @@ export const resetPassword = async (req, res) => {
 };
 
 
-// export const resetPassword = async (req, res) => {
-//   try {
-//     const { id, token, password } = req.body;
-
-//     // token verify
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//     if (decoded.id !== id) {
-//       return res.status(400).json({ message: "Token etibarsızdır" });
-//     }
-
-//     const user = await User.findById(id);
-//     if (!user) {
-//       return res.status(404).json({ message: "İstifadəçi tapılmadı" });
-//     }
-
-//     // password hash
-//     const hashed = await bcrypt.hash(password, 10);
-//     user.password = hashed;
-//     await user.save();
-
-//     return res.json({ message: "Parol uğurla yeniləndi ✅" });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: "Xəta baş verdi" });
-//   }
-// };
