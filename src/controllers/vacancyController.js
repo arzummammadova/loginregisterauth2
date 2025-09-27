@@ -92,20 +92,20 @@ export const deleteVacancyAll = async (req, res) => {
   }
 };
 
-export const deleteVacancyById=async(req,res)=>{
+export const deleteVacancyById = async (req, res) => {
   try {
-    const {id}=req.params
-    const deletedVacancy=await Vacancy.findByIdAndDelete(id)
-    if(!deletedVacancy){
-     return res.status(404).json({message:"cannot find vacancy"})
+    const { id } = req.params
+    const deletedVacancy = await Vacancy.findByIdAndDelete(id)
+    if (!deletedVacancy) {
+      return res.status(404).json({ message: "cannot find vacancy" })
     }
-    return res.status(200).json({message:"deleted successfully"})
-    
+    return res.status(200).json({ message: "deleted successfully" })
+
   } catch (error) {
-    return res.status(500).json({message:"internal serve error",error:error.message})
-    
+    return res.status(500).json({ message: "internal serve error", error: error.message })
+
   }
- 
+
 }
 
 
@@ -127,7 +127,7 @@ export const postVacancy = async (req, res) => {
       salary,
       featured = false,
       urgent = false,
-      
+
       // Əlavə məlumatlar
       experience,
       education,
@@ -136,10 +136,10 @@ export const postVacancy = async (req, res) => {
       responsibilities = [],
       benefits = [],
       tags = [],
-      
+
       // Şirkət məlumatları
       companyInfo,
-      
+
       // Əlavə parametrlər
       applicationMethod = "internal",
       applicationEmail,
@@ -148,17 +148,17 @@ export const postVacancy = async (req, res) => {
       languages = [],
       ageRange,
       metaDescription,
-      
+
       // Admin/Creator məlumatları
       createdBy,
-      
+
       // Lokasiya coordinates (optional)
       coordinates,
-      
+
       // Status
       status = "active",
       isApproved = false // admin təsdiq etməlidir
-      
+
     } = req.body;
 
     // Validation - əsas sahələr
@@ -217,7 +217,7 @@ export const postVacancy = async (req, res) => {
       applicants: 0, // başlanğıc dəyər
       featured,
       urgent,
-      
+
       // Əlavə məlumatlar
       experience,
       education,
@@ -226,7 +226,7 @@ export const postVacancy = async (req, res) => {
       responsibilities,
       benefits,
       tags,
-      
+
       // Şirkət məlumatları
       companyInfo: {
         name: companyInfo?.name || org, // əgər şirkət adı verilməyibsə org istifadə et
@@ -238,29 +238,29 @@ export const postVacancy = async (req, res) => {
         founded: companyInfo?.founded,
         about: companyInfo?.about
       },
-      
+
       // SEO və metadata
       slug: uniqueSlug,
       metaDescription: metaDescription || description?.substring(0, 160),
-      
+
       // Əlaqə məlumatları
       applicationMethod,
       applicationEmail,
       externalApplicationUrl,
-      
+
       // Əlavə parametrlər
       contractType,
       languages,
       ageRange,
       coordinates,
-      
+
       // Status və moderasiya
       status,
       isApproved,
-      
+
       // Yaradıcı məlumatları
       createdBy: createdBy || req.user?.id, // əgər authentication middleware-dan gəlirsə
-      
+
       // İstatistika sahələri (default dəyərlər)
       clickCount: 0,
       shareCount: 0,
@@ -286,21 +286,21 @@ export const postVacancy = async (req, res) => {
 
   } catch (error) {
     console.error("Vacancy yaratmaqda xəta:", error);
-    
+
     // Mongoose validation xətaları üçün xüsusi handling
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => ({
         field: err.path,
         message: err.message
       }));
-      
+
       return res.status(400).json({
         success: false,
         message: "Validation xətası",
         errors: validationErrors
       });
     }
-    
+
     // Duplicate key xətası (məsələn slug)
     if (error.code === 11000) {
       return res.status(400).json({
@@ -309,7 +309,7 @@ export const postVacancy = async (req, res) => {
         error: "Duplicate entry"
       });
     }
-    
+
     return res.status(500).json({
       success: false,
       message: "Server xətası",
@@ -322,27 +322,27 @@ export const postVacancy = async (req, res) => {
 export const getVacancyBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
-    
+
     const vacancy = await Vacancy.findOne({ slug })
       .populate('createdBy', 'name email')
       .populate('relatedJobs', 'title org salary slug')
       .exec();
-    
+
     if (!vacancy) {
       return res.status(404).json({
         success: false,
         message: "Vakansiya tapılmadı"
       });
     }
-    
+
     // Views sayını artır (asynchronous)
     vacancy.incrementViews().catch(console.error);
-    
+
     return res.status(200).json({
       success: true,
       data: { vacancy }
     });
-    
+
   } catch (error) {
     console.error("Vakansiya məlumatlarını almaqda xəta:", error);
     return res.status(500).json({

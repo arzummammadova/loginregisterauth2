@@ -1,4 +1,4 @@
-import { deleteVacancyAll, deleteVacancyById, getVacancy, getVacancyById, postVacancy } from "../controllers/vacancyController.js"
+import { deleteVacancyAll, deleteVacancyById, getVacancy, getVacancyById, getVacancyBySlug, postVacancy } from "../controllers/vacancyController.js"
 import express from "express"
 
 const vacancyrouter=express.Router()
@@ -13,6 +13,8 @@ const vacancyrouter=express.Router()
  */
 
 vacancyrouter.post('/',postVacancy)
+// Vacancy detail by slug
+vacancyrouter.get('/:slug', getVacancyBySlug);
 
 
 

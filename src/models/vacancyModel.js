@@ -247,6 +247,8 @@ const VacancySchema = new mongoose.Schema(
       type: String, // sadəcə string kimi (ObjectId deyil)
       required: false,
     },
+    relatedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Vacancy" }],
+
     
     // Lokasiya coordinates
     coordinates: {
