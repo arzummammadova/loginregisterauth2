@@ -1,5 +1,6 @@
 import { deleteVacancyAll, deleteVacancyById, getVacancy, getVacancyById, getVacancyBySlug, postVacancy } from "../controllers/vacancyController.js"
 import express from "express"
+import authMiddleware from "../middleware/authMiddleware.js";
 
 const vacancyrouter=express.Router()
 /**
@@ -12,7 +13,7 @@ const vacancyrouter=express.Router()
  *         description: List of vacancies
  */
 
-vacancyrouter.post('/',postVacancy)
+vacancyrouter.post('/',authMiddleware,postVacancy)
 // Vacancy detail by slug
 vacancyrouter.get('/:slug', getVacancyBySlug);
 

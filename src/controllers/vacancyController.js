@@ -157,6 +157,7 @@ export const postVacancy = async (req, res) => {
 
       // Status
       status = "active",
+      eventType,
       isApproved = false // admin təsdiq etməlidir
 
     } = req.body;
@@ -217,6 +218,7 @@ export const postVacancy = async (req, res) => {
       applicants: 0, // başlanğıc dəyər
       featured,
       urgent,
+      eventType,
 
       // Əlavə məlumatlar
       experience,

@@ -4,7 +4,7 @@ const authMiddleware = (req, res, next) => {
     try {
         const token = req.cookies.token; // Tokeni çərəzdən oxuyur
         if (!token) {
-            return res.status(401).json({ message: "Access denied. No token provided." });
+            return res.status(401).json({ message: "Token yoxdu Login ol" });
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
