@@ -212,7 +212,7 @@ const VacancySchema = new mongoose.Schema(
     },
     isApproved: {
       type: Boolean,
-      default: true, // test üçün true, production-da false
+      default: false, // test üçün true, production-da false
     },
     
     // Statistika

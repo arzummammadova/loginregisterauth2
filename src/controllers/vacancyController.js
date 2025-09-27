@@ -1,53 +1,5 @@
 import Vacancy from "../models/vacancyModel.js";
-// export const postVacancy = async (req, res) => {
-//   try {
-//     const {
-//       logo,
-//       title,
-//       org,
-//       postedTime,
-//       location,
-//       category,
-//       type,
-//       workplace,
-//       paymentType,
-//       salary,
-//       views,
-//       applicants,
-//       featured,
-//     } = req.body;
-
-//     // Yeni vacancy obyekti yarat
-//     const newVacancy = new Vacancy({
-//       logo,
-//       title,
-//       org,
-//       postedTime, // əgər backend göndərirsə Date kimi gəlməlidir
-//       location,
-//       category,
-//       type,
-//       workplace,
-//       paymentType,
-//       salary,
-//       views,
-//       applicants,
-//       featured,
-//     });
-
-//     // DB-yə save et
-//     const savedVacancy = await newVacancy.save();
-
-//     return res.status(201).json({
-//       message: "Vakansiya uğurla əlavə olundu ✅",
-//       vacancy: savedVacancy,
-//     });
-//   } catch (error) {
-//     console.error("Vacancy yaratmaqda xəta:", error);
-//     return res
-//       .status(500)
-//       .json({ message: "Server error", error: error.message });
-//   }
-// };
+import { transporter } from "../utils/mailer.js";
 
 export const getVacancy = async (req, res) => {
   try {
@@ -108,13 +60,9 @@ export const deleteVacancyById = async (req, res) => {
 
 }
 
-
-
-
 export const postVacancy = async (req, res) => {
   try {
     const {
-      // Əsas məlumatlar
       logo,
       title,
       org,
@@ -127,8 +75,6 @@ export const postVacancy = async (req, res) => {
       salary,
       featured = false,
       urgent = false,
-
-      // Əlavə məlumatlar
       experience,
       education,
       description,
@@ -136,11 +82,7 @@ export const postVacancy = async (req, res) => {
       responsibilities = [],
       benefits = [],
       tags = [],
-
-      // Şirkət məlumatları
       companyInfo,
-
-      // Əlavə parametrlər
       applicationMethod = "internal",
       applicationEmail,
       externalApplicationUrl,
@@ -148,65 +90,24 @@ export const postVacancy = async (req, res) => {
       languages = [],
       ageRange,
       metaDescription,
-
-      // Admin/Creator məlumatları
-      createdBy,
-
-      // Lokasiya coordinates (optional)
-      coordinates,
-
-      // Status
-      status = "active",
       eventType,
-      isApproved = false // admin təsdiq etməlidir
-
     } = req.body;
 
-    // Validation - əsas sahələr
-    if (!title || !org || !location || !category || !type || !workplace || !paymentType) {
-      return res.status(400).json({
-        message: "Zəruri sahələr doldurulmalıdır",
-        required: ["title", "org", "location", "category", "type", "workplace", "paymentType"]
-      });
+    // Əsas validation
+    if (!title || !org || !location || !category || !type || !workplace || !paymentType || !experience || !education || !description || !companyInfo?.name || !eventType) {
+      return res.status(400).json({ message: "Zəruri sahələr doldurulmalıdır" });
     }
 
-    // Validation - paymentType "paid" olarsa salary lazımdır
     if (paymentType === "paid" && !salary) {
-      return res.status(400).json({
-        message: "Ödənişli iş üçün maaş göstərilməlidir"
-      });
+      return res.status(400).json({ message: "Ödənişli iş üçün maaş göstərilməlidir" });
     }
 
-    // Validation - experience və education
-    if (!experience || !education) {
-      return res.status(400).json({
-        message: "Təcrübə və təhsil sahələri doldurulmalıdır"
-      });
-    }
-
-    // Slug yaradırıq (title əsasında)
-    let baseSlug = title
-      .toLowerCase()
-      .replace(/ç/g, 'c')
-      .replace(/ğ/g, 'g')
-      .replace(/ı/g, 'i')
-      .replace(/ş/g, 's')
-      .replace(/ü/g, 'u')
-      .replace(/ö/g, 'o')
-      .replace(/[^a-z0-9]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-
-    // Unique slug təmin etmək üçün timestamp əlavə edək
-    const uniqueSlug = `${baseSlug}-${Date.now()}`;
-
-    // Yeni vacancy obyekti yarat
+    // Yeni vacancy yaradılır
     const newVacancy = new Vacancy({
-      // Əsas məlumatlar
       logo,
       title,
       org,
-      postedTime: new Date(), // avtomatik current time
+      postedTime: new Date(),
       deadline: deadline ? new Date(deadline) : null,
       location,
       category,
@@ -214,13 +115,10 @@ export const postVacancy = async (req, res) => {
       workplace,
       paymentType,
       salary: paymentType === "paid" ? salary : null,
-      views: 0, // başlanğıc dəyər
-      applicants: 0, // başlanğıc dəyər
+      views: 0,
+      applicants: 0,
       featured,
       urgent,
-      eventType,
-
-      // Əlavə məlumatlar
       experience,
       education,
       description,
@@ -228,99 +126,71 @@ export const postVacancy = async (req, res) => {
       responsibilities,
       benefits,
       tags,
-
-      // Şirkət məlumatları
-      companyInfo: {
-        name: companyInfo?.name || org, // əgər şirkət adı verilməyibsə org istifadə et
-        website: companyInfo?.website,
-        phone: companyInfo?.phone,
-        email: companyInfo?.email || applicationEmail,
-        employees: companyInfo?.employees,
-        industry: companyInfo?.industry,
-        founded: companyInfo?.founded,
-        about: companyInfo?.about
-      },
-
-      // SEO və metadata
-      slug: uniqueSlug,
-      metaDescription: metaDescription || description?.substring(0, 160),
-
-      // Əlaqə məlumatları
+      companyInfo,
+      slug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now(),
+      metaDescription: metaDescription || description.substring(0, 160),
+      status: "active",
+      isApproved: false, // production üçün false
       applicationMethod,
       applicationEmail,
       externalApplicationUrl,
-
-      // Əlavə parametrlər
       contractType,
       languages,
       ageRange,
-      coordinates,
-
-      // Status və moderasiya
-      status,
-      isApproved,
-
-      // Yaradıcı məlumatları
-      createdBy: createdBy || req.user?.id, // əgər authentication middleware-dan gəlirsə
-
-      // İstatistika sahələri (default dəyərlər)
-      clickCount: 0,
-      shareCount: 0,
-      bookmarkCount: 0
+      eventType,
+      createdBy: req.user?.id || null
     });
 
-    // DB-yə save et
     const savedVacancy = await newVacancy.save();
 
-    // Populate company info if needed
-    const populatedVacancy = await Vacancy.findById(savedVacancy._id)
-      .populate('createdBy', 'name email') // user məlumatlarını əlavə et
-      .exec();
+    // Admin email göndər
+  await transporter.sendMail({
+  from: process.env.EMAIL_USER,     // sənin Gmail hesabın olmalıdır
+  replyTo: req.user.email,          // istifadəçi emaili burada
+  to: process.env.ADMIN_EMAIL,      // admin email
+  subject: "Yeni vakansiya əlavə olundu - Təsdiq gözləyir",
+  html: `
+    <h2>Yeni vakansiya əlavə edildi</h2>
+    <p><b>Başlıq:</b> ${savedVacancy.title}</p>
+    <p><b>Şirkət:</b> ${savedVacancy.org}</p>
+    <p><b>Kateqoriya:</b> ${savedVacancy.category}</p>
+    <p><b>Lokasiya:</b> ${savedVacancy.location}</p>
+    <br/>
+    <p>Zəhmət olmasa admin paneldən təsdiqlə.</p>
+  `,
+});
+
 
     return res.status(201).json({
       success: true,
-      message: "Vakansiya uğurla əlavə olundu ✅",
-      data: {
-        vacancy: populatedVacancy,
-        slug: uniqueSlug, // frontend-ə slug göndər ki redirect edə bilsin
-      }
+      message: "Vakansiya əlavə olundu ✅ (admin təsdiqi gözləyir)",
+      data: savedVacancy,
     });
-
   } catch (error) {
     console.error("Vacancy yaratmaqda xəta:", error);
+    return res.status(500).json({ success: false, message: "Server xətası", error: error.message });
+  }
+};
+// controller
+export const approveVacancy = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-    // Mongoose validation xətaları üçün xüsusi handling
-    if (error.name === 'ValidationError') {
-      const validationErrors = Object.values(error.errors).map(err => ({
-        field: err.path,
-        message: err.message
-      }));
+    const vacancy = await Vacancy.findByIdAndUpdate(
+      id,
+      { isApproved: true },
+      { new: true }
+    );
 
-      return res.status(400).json({
-        success: false,
-        message: "Validation xətası",
-        errors: validationErrors
-      });
-    }
+    if (!vacancy) return res.status(404).json({ message: "Vakansiya tapılmadı ❌" });
 
-    // Duplicate key xətası (məsələn slug)
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "Bu başlıqla vakansiya artıq mövcuddur",
-        error: "Duplicate entry"
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Server xətası",
-      error: error.message
-    });
+    return res.status(200).json({ success: true, message: "Vakansiya təsdiq olundu ✅", data: vacancy });
+  } catch (error) {
+    console.error("approveVacancy error:", error);
+    return res.status(500).json({ success: false, message: "Server xətası", error: error.message });
   }
 };
 
-// Yardımçı funksiya - vakansiya detayını almaq üçün
 export const getVacancyBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
