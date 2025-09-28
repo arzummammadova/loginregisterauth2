@@ -2,11 +2,12 @@ import { approveVacancy, deleteVacancyAll, deleteVacancyById, getVacancy, getVac
 import express from "express"
 import authMiddleware from "../middleware/authMiddleware.js";
 import { isAdmin } from "../middleware/isAdmin.js";
+import { optionalAuth } from "../middleware/optionalAuth.js";
 
 const vacancyrouter=express.Router()
 
 vacancyrouter.post('/',authMiddleware,postVacancy)
-vacancyrouter.get('/', authMiddleware, getVacancy);
+vacancyrouter.get('/', optionalAuth, getVacancy);
 
 vacancyrouter.patch("/:id/approve", authMiddleware, isAdmin, approveVacancy);
 vacancyrouter.patch("/:id/reject", authMiddleware, isAdmin, rejectVacancy);
