@@ -19,7 +19,6 @@ export const getVacancy = async (req, res) => {
   }
 };
 
-
 export const getVacancyById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -55,19 +54,20 @@ export const deleteVacancyAll = async (req, res) => {
 
 export const deleteVacancyById = async (req, res) => {
   try {
-    const { id } = req.params
-    const deletedVacancy = await Vacancy.findByIdAndDelete(id)
-    if (!deletedVacancy) {
-      return res.status(404).json({ message: "cannot find vacancy" })
+    const { id } = req.params;
+    const vacancy = await Vacancy.findById(id);
+    if (!vacancy) {
+      return res.status(404).json({ message: "Vacancy not found ❌" });
     }
-    return res.status(200).json({ message: "deleted successfully" })
 
+    await vacancy.deleteOne(); // və ya Vacancy.findByIdAndDelete(id)
+    return res.status(200).json({ message: "Vacancy deleted ✅" });
   } catch (error) {
-    return res.status(500).json({ message: "internal serve error", error: error.message })
-
+    console.error("Delete vacancy error:", error);
+    return res.status(500).json({ message: "Server error ❌" });
   }
+};
 
-}
 export const postVacancy = async (req, res) => {
   try {
     const {
@@ -466,3 +466,49 @@ export const rejectVacancy = async (req, res) => {
     });
   }
 };
+
+
+export const editVacancy = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    // Vacancyni tap
+    const vacancy = await Vacancy.findById(id);
+    if (!vacancy) return res.status(404).json({ message: "Vacancy tapılmadı ❌" });
+
+    // Authorization: admin və ya yaradan istifadəçi
+    if (req.user.role !== "admin" && String(vacancy.createdBy) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Bu vakansiyanı redaktə etməyə icazəniz yoxdur ❌" });
+    }
+
+    // Validation (zəruri sahələr)
+    const requiredFields = ["title","org","location","category","type","workplace","paymentType","experience","education","description","companyInfo"];
+    for (let field of requiredFields) {
+      if (!updateData[field]) return res.status(400).json({ message: `${field} zəruridir` });
+    }
+
+    if (updateData.paymentType === "paid" && !updateData.salary) {
+      return res.status(400).json({ message: "Ödənişli iş üçün maaş göstərilməlidir" });
+    }
+
+    // Slug yeniləyək əgər title dəyişibsə
+    if (updateData.title && updateData.title !== vacancy.title) {
+      updateData.slug = updateData.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now();
+    }
+
+    // Update et
+    const updatedVacancy = await Vacancy.findByIdAndUpdate(id, updateData, { new: true });
+
+    return res.status(200).json({
+      success: true,
+      message: "Vakansiya uğurla redaktə olundu ✅",
+      data: updatedVacancy
+    });
+
+  } catch (error) {
+    console.error("Edit vacancy error:", error);
+    return res.status(500).json({ message: "Internal server error ❌", error: error.message });
+  }
+};
+
