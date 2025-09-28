@@ -572,7 +572,7 @@ const VacancySchema = new mongoose.Schema(
     eventType: {
       type: String,
       enum: ["internship", "volunteering", "job", "event", "webinar"],
-      required: true,
+      required: false,
     },
     // Yaş məhdudiyyəti
     ageRange: {
