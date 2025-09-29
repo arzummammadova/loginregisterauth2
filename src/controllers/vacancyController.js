@@ -71,7 +71,7 @@ export const deleteVacancyById = async (req, res) => {
 export const postVacancy = async (req, res) => {
   try {
     const {
-      logo,
+      // logo,
       title,
       org,
       deadline,
@@ -100,7 +100,8 @@ export const postVacancy = async (req, res) => {
       metaDescription,
       eventType,
     } = req.body;
-
+ 
+    const logo = req.file ? req.file.path : null; 
     // Əsas validation
     if (!title || !org || !location || !category || !type || !workplace || !paymentType || !experience || !education || !description || !companyInfo?.name || !eventType) {
       return res.status(400).json({ message: "Zəruri sahələr doldurulmalıdır" });
