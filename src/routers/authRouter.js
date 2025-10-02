@@ -10,6 +10,8 @@ import {
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import express from "express";
+import User from "../models/authModel.js";
+
 
 import authMiddleware from "../middleware/authMiddleware.js"; 
 
@@ -163,11 +165,28 @@ const debugCookies = (req, res, next) => {
 
 router.use('/me', debugCookies);
 // Yeni 'me' endpointi
-router.get("/me", authMiddleware, (req, res) => {
-    // authMiddleware-i keçdikdən sonra req.user obyekti mövcud olacaq
-    return res.status(200).json({
-      user: req.user,
-    });
+// router.get("/me", authMiddleware, (req, res) => {
+//     // authMiddleware-i keçdikdən sonra req.user obyekti mövcud olacaq
+//     return res.status(200).json({
+//       user: req.user,
+//     });
+// });
+
+router.get("/me", authMiddleware, async (req, res) => {
+  try {
+    // authMiddleware-dən gələn id
+    const user = await User.findById(req.user.id).select("-password"); 
+    // -password yazmaqla şifrəni göndərmirik
+
+    if (!user) {
+      return res.status(404).json({ message: "İstifadəçi tapılmadı" });
+    }
+
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.error("ME endpoint error:", error);
+    return res.status(500).json({ message: "Server xətası" });
+  }
 });
 
 router.get(

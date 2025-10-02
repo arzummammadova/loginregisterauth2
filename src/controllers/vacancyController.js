@@ -1,6 +1,8 @@
 import Vacancy from "../models/vacancyModel.js";
 import { transporter } from "../utils/mailer.js";
 import User from "../models/authModel.js";
+import OTP from "../models/otp.js"; // OTP üçün ayrıca model
+import crypto from "crypto";
 export const getVacancy = async (req, res) => {
   try {
     let query = { isApproved: true }; // default yalnız təsdiqlənmiş vakansiyalar
@@ -90,122 +92,122 @@ export const deleteVacancyById = async (req, res) => {
     return res.status(500).json({ message: "Server error ❌" });
   }
 };
-export const postVacancy = async (req, res) => {
-  try {
-    // Array-ləri və companyInfo-nu parse et (FormData-dan string gəlir)
-    const requirements = req.body.requirements ? JSON.parse(req.body.requirements) : [];
-    const responsibilities = req.body.responsibilities ? JSON.parse(req.body.responsibilities) : [];
-    const benefits = req.body.benefits ? JSON.parse(req.body.benefits) : [];
-    const tags = req.body.tags ? JSON.parse(req.body.tags) : [];
-    const languages = req.body.languages ? JSON.parse(req.body.languages) : [];
-    const companyInfo = req.body.companyInfo ? JSON.parse(req.body.companyInfo) : {};
+// export const postVacancy = async (req, res) => {
+//   try {
+//     // Array-ləri və companyInfo-nu parse et (FormData-dan string gəlir)
+//     const requirements = req.body.requirements ? JSON.parse(req.body.requirements) : [];
+//     const responsibilities = req.body.responsibilities ? JSON.parse(req.body.responsibilities) : [];
+//     const benefits = req.body.benefits ? JSON.parse(req.body.benefits) : [];
+//     const tags = req.body.tags ? JSON.parse(req.body.tags) : [];
+//     const languages = req.body.languages ? JSON.parse(req.body.languages) : [];
+//     const companyInfo = req.body.companyInfo ? JSON.parse(req.body.companyInfo) : {};
 
-    // Boolean dəyərləri düzgün parse et
-    const featured = req.body.featured === 'true';
-    const urgent = req.body.urgent === 'true';
+//     // Boolean dəyərləri düzgün parse et
+//     const featured = req.body.featured === 'true';
+//     const urgent = req.body.urgent === 'true';
 
-    const {
-      title,
-      org,
-      deadline,
-      location,
-      category,
-      type,
-      workplace,
-      paymentType,
-      salary,
-      experience,
-      education,
-      description,
-      applicationMethod = "internal",
-      applicationEmail,
-      externalApplicationUrl,
-      contractType,
-      ageRange,
-      metaDescription,
-      eventType,
-    } = req.body;
+//     const {
+//       title,
+//       org,
+//       deadline,
+//       location,
+//       category,
+//       type,
+//       workplace,
+//       paymentType,
+//       salary,
+//       experience,
+//       education,
+//       description,
+//       applicationMethod = "internal",
+//       applicationEmail,
+//       externalApplicationUrl,
+//       contractType,
+//       ageRange,
+//       metaDescription,
+//       eventType,
+//     } = req.body;
 
-    const logo = req.file ? req.file.path : null;
+//     const logo = req.file ? req.file.path : null;
 
-    // Validation
-    if (!title || !org || !location || !category || !type || !workplace || !paymentType || !experience || !education || !description || !companyInfo?.name || !eventType) {
-      return res.status(400).json({ message: "Zəruri sahələr doldurulmalıdır" });
-    }
+//     // Validation
+//     if (!title || !org || !location || !category || !type || !workplace || !paymentType || !experience || !education || !description || !companyInfo?.name || !eventType) {
+//       return res.status(400).json({ message: "Zəruri sahələr doldurulmalıdır" });
+//     }
 
-    if (paymentType === "paid" && !salary) {
-      return res.status(400).json({ message: "Ödənişli iş üçün maaş göstərilməlidir" });
-    }
+//     if (paymentType === "paid" && !salary) {
+//       return res.status(400).json({ message: "Ödənişli iş üçün maaş göstərilməlidir" });
+//     }
 
-    const newVacancy = new Vacancy({
-      logo,
-      title,
-      org,
-      postedTime: new Date(),
-      deadline: deadline ? new Date(deadline) : null,
-      location,
-      category,
-      type,
-      workplace,
-      paymentType,
-      salary: paymentType === "paid" ? salary : null,
-      views: 0,
-      applicants: 0,
-      featured,
-      urgent,
-      experience,
-      education,
-      description,
-      requirements,
-      responsibilities,
-      benefits,
-      tags,
-      companyInfo,
-      slug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now(),
-      metaDescription: metaDescription || description.substring(0, 160),
-      status: "active",
-      isApproved: null,
-      applicationMethod,
-      applicationEmail,
-      externalApplicationUrl,
-      contractType,
-      languages,
-      ageRange,
-      eventType,
-      createdBy: req.user?.id || req.user?._id || null,
-    });
+//     const newVacancy = new Vacancy({
+//       logo,
+//       title,
+//       org,
+//       postedTime: new Date(),
+//       deadline: deadline ? new Date(deadline) : null,
+//       location,
+//       category,
+//       type,
+//       workplace,
+//       paymentType,
+//       salary: paymentType === "paid" ? salary : null,
+//       views: 0,
+//       applicants: 0,
+//       featured,
+//       urgent,
+//       experience,
+//       education,
+//       description,
+//       requirements,
+//       responsibilities,
+//       benefits,
+//       tags,
+//       companyInfo,
+//       slug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now(),
+//       metaDescription: metaDescription || description.substring(0, 160),
+//       status: "active",
+//       isApproved: null,
+//       applicationMethod,
+//       applicationEmail,
+//       externalApplicationUrl,
+//       contractType,
+//       languages,
+//       ageRange,
+//       eventType,
+//       createdBy: req.user?.id || req.user?._id || null,
+//     });
 
-    const savedVacancy = await newVacancy.save();
+//     const savedVacancy = await newVacancy.save();
 
-    // Admin email göndər
-    try {
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        replyTo: req.user?.email,
-        to: process.env.ADMIN_EMAIL,
-        subject: "Yeni vakansiya əlavə olundu - Təsdiq gözləyir",
-        html: `
-          <h2>Yeni vakansiya təsdiq gözləyir</h2>
-          <p><strong>Başlıq:</strong> ${savedVacancy.title}</p>
-          <p><strong>Şirkət:</strong> ${savedVacancy.org}</p>
-          <p><strong>Kateqoriya:</strong> ${savedVacancy.category}</p>
-          <p><strong>Lokasiya:</strong> ${savedVacancy.location}</p>
-        `,
-      });
-    } catch (err) {
-      console.error("Email error:", err.message);
-    }
+//     // Admin email göndər
+//     try {
+//       await transporter.sendMail({
+//         from: process.env.EMAIL_USER,
+//         replyTo: req.user?.email,
+//         to: process.env.ADMIN_EMAIL,
+//         subject: "Yeni vakansiya əlavə olundu - Təsdiq gözləyir",
+//         html: `
+//           <h2>Yeni vakansiya təsdiq gözləyir</h2>
+//           <p><strong>Başlıq:</strong> ${savedVacancy.title}</p>
+//           <p><strong>Şirkət:</strong> ${savedVacancy.org}</p>
+//           <p><strong>Kateqoriya:</strong> ${savedVacancy.category}</p>
+//           <p><strong>Lokasiya:</strong> ${savedVacancy.location}</p>
+//         `,
+//       });
+//     } catch (err) {
+//       console.error("Email error:", err.message);
+//     }
 
-    return res.status(201).json({
-      success: true,
-      message: "Vakansiya əlavə olundu ✅ (admin təsdiqi gözləyir)",
-      data: savedVacancy,
-    });
-  } catch (error) {
-    console.error("Vacancy yaratmaqda xəta:", error);
-    return res.status(500).json({ success: false, message: "Server xətası", error: error.message });
-  }
-};
+//     return res.status(201).json({
+//       success: true,
+//       message: "Vakansiya əlavə olundu ✅ (admin təsdiqi gözləyir)",
+//       data: savedVacancy,
+//     });
+//   } catch (error) {
+//     console.error("Vacancy yaratmaqda xəta:", error);
+//     return res.status(500).json({ success: false, message: "Server xətası", error: error.message });
+//   }
+// };
 export const approveVacancy = async (req, res) => {
   try {
     const { id } = req.params;
@@ -395,3 +397,291 @@ export const editVacancy = async (req, res) => {
   }
 };
 
+// vacancyController.js faylına əlavə et
+
+// ✅ DÜZƏLDİLMİŞ postVacancy
+export const postVacancy = async (req, res) => {
+  try {
+    // Array-ləri və companyInfo-nu parse et
+    const requirements = req.body.requirements ? JSON.parse(req.body.requirements) : [];
+    const responsibilities = req.body.responsibilities ? JSON.parse(req.body.responsibilities) : [];
+    const benefits = req.body.benefits ? JSON.parse(req.body.benefits) : [];
+    const tags = req.body.tags ? JSON.parse(req.body.tags) : [];
+    const languages = req.body.languages ? JSON.parse(req.body.languages) : [];
+    const companyInfo = req.body.companyInfo ? JSON.parse(req.body.companyInfo) : {};
+
+    const featured = req.body.featured === 'true';
+    const urgent = req.body.urgent === 'true';
+
+    const {
+      title, org, deadline, location, category, type, workplace,
+      paymentType, salary, experience, education, description,
+      applicationMethod = "internal", applicationEmail,
+      externalApplicationUrl, contractType, ageRange,
+      metaDescription, eventType,
+    } = req.body;
+
+    const logo = req.file ? req.file.path : null;
+
+    // Validation
+    if (!title || !org || !location || !category || !type || !workplace || 
+        !paymentType || !experience || !education || !description || 
+        !companyInfo?.name || !eventType) {
+      return res.status(400).json({ message: "Zəruri sahələr doldurulmalıdır" });
+    }
+
+    if (paymentType === "paid" && !salary) {
+      return res.status(400).json({ message: "Ödənişli iş üçün maaş göstərilməlidir" });
+    }
+
+    // ✅ FIX: Həmişə _id istifadə et
+    console.log("🔍 req.user:", req.user); // Debug üçün
+
+    const newVacancy = new Vacancy({
+      logo, title, org,
+      postedTime: new Date(),
+      deadline: deadline ? new Date(deadline) : null,
+      location, category, type, workplace, paymentType,
+      salary: paymentType === "paid" ? salary : null,
+      views: 0,
+      applicants: 0,
+      featured, urgent, experience, education, description,
+      requirements, responsibilities, benefits, tags, companyInfo,
+      slug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now(),
+      metaDescription: metaDescription || description.substring(0, 160),
+      status: "active",
+      isApproved: null,
+      applicationMethod, applicationEmail, externalApplicationUrl,
+      contractType, languages, ageRange, eventType,
+      createdBy: req.user._id, // ✅ Yalnız _id istifadə et
+    });
+
+    const savedVacancy = await newVacancy.save();
+
+    console.log("✅ Vakansiya yaradıldı:", {
+      id: savedVacancy._id,
+      createdBy: savedVacancy.createdBy,
+      title: savedVacancy.title
+    });
+
+    // Admin email göndər
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        replyTo: req.user?.email,
+        to: process.env.ADMIN_EMAIL,
+        subject: "Yeni vakansiya əlavə olundu - Təsdiq gözləyir",
+        html: `
+          <h2>Yeni vakansiya təsdiq gözləyir</h2>
+          <p><strong>Başlıq:</strong> ${savedVacancy.title}</p>
+          <p><strong>Şirkət:</strong> ${savedVacancy.org}</p>
+          <p><strong>Kateqoriya:</strong> ${savedVacancy.category}</p>
+          <p><strong>Lokasiya:</strong> ${savedVacancy.location}</p>
+          <p><strong>Yaradan:</strong> ${req.user.username || req.user.email}</p>
+        `,
+      });
+    } catch (err) {
+      console.error("Email error:", err.message);
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Vakansiya əlavə olundu ✅ (admin təsdiqi gözləyir)",
+      data: savedVacancy,
+    });
+  } catch (error) {
+    console.error("Vacancy yaratmaqda xəta:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Server xətası", 
+      error: error.message 
+    });
+  }
+};
+
+// ✅ DÜZƏLDİLMİŞ getUserVacancies
+export const getUserVacancies = async (req, res) => {
+  try {
+    const userId = req.user._id; // ✅ _id istifadə et
+
+    console.log("🔍 İstifadəçi ID:", userId); // Debug
+
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "İstifadəçi identifikasiyası tapılmadı. Zəhmət olmasa daxil olun." 
+      });
+    }
+
+    const query = { createdBy: userId };
+
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const total = await Vacancy.countDocuments(query);
+    
+    console.log("📊 Tapılan vakansiya sayı:", total); // Debug
+
+    const vacancies = await Vacancy.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    console.log("📋 Vakansiyalar:", vacancies.map(v => ({
+      id: v._id,
+      title: v.title,
+      createdBy: v.createdBy,
+      isApproved: v.isApproved
+    })));
+
+    if (vacancies.length === 0 && page === 1) {
+      return res.status(200).json({
+        success: true,
+        message: "Hələlik heç bir vakansiya əlavə etməmisiniz.",
+        data: [],
+        page,
+        totalPages: 0,
+        totalItems: 0,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      page,
+      totalPages: Math.ceil(total / limit),
+      totalItems: total,
+      data: vacancies,
+    });
+
+  } catch (error) {
+    console.error("getUserVacancies error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server xətası, istifadəçi vakansiyalarını ala bilmədi",
+      error: error.message,
+    });
+  }
+};
+
+// vacancyController.js faylına əlavə et
+
+// export const deleteUserVacancy = async (req, res) => {
+//   try {
+//     const { id } = req.params; // Silinəcək vakansiyanın ID-si
+//     const userId = req.user._id; // Cari istifadəçinin ID-si
+
+//     if (!userId) {
+//       return res.status(401).json({ message: "İcazə yoxdur. Zəhmət olmasa daxil olun. ❌" });
+//     }
+
+//     // Vakansiyanı tap və yoxla ki, həqiqətən də bu istifadəçi tərəfindən yaradılıb
+//     const vacancy = await Vacancy.findOneAndDelete({
+//       _id: id,
+//       createdBy: userId,
+//     });
+
+//     if (!vacancy) {
+//       // Vakansiya tapılmayıbsa VƏ YA `createdBy` cari istifadəçi deyilsə
+//       const existingVacancy = await Vacancy.findById(id);
+//       if (!existingVacancy) {
+//          return res.status(404).json({ message: "Vakansiya tapılmadı ❌" });
+//       } else {
+//          return res.status(403).json({ message: "Bu vakansiyanı silməyə icazəniz yoxdur ❌" });
+//       }
+//     }
+
+//     return res.status(200).json({ message: "Vakansiya uğurla silindi ✅" });
+
+//   } catch (error) {
+//     console.error("deleteUserVacancy error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server xətası, vakansiya silinə bilmədi",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+export const requestVacancyDelete = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const vacancy = await Vacancy.findById(id);
+
+    if (!vacancy) {
+      return res.status(404).json({ message: "Vakansiya tapılmadı ❌" });
+    }
+
+    if (vacancy.createdBy.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Bu vakansiyanı silməyə icazəniz yoxdur ❌" });
+    }
+
+    // OTP kod yarat
+    const otpCode = crypto.randomInt(100000, 999999); // 6 rəqəmli OTP
+    const otpDoc = new OTP({
+      userId,
+      vacancyId: id,
+      otp: otpCode,
+      expiresAt: Date.now() + 5 * 60 * 1000 // 5 dəqiqəlik etibarlılıq
+    });
+    await otpDoc.save();
+
+    // Email göndər
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: req.user.email,
+      subject: "Vakansiya silmə təsdiqi",
+      text: `Vakansiyanı silmək üçün OTP kodunuz: ${otpCode}`,
+    });
+
+    return res.status(200).json({ message: "OTP kod emailə göndərildi ✅" });
+
+  } catch (error) {
+    console.error("requestVacancyDelete error:", error);
+    return res.status(500).json({ message: "Server xətası" });
+  }
+};
+
+
+export const deleteUserVacancyWithOtp = async (req, res) => {
+  try {
+    const { id } = req.params; // vakansiya id
+    const { otp } = req.body; // istifadəçinin yazdığı otp
+    const userId = req.user._id;
+
+    // OTP-ni DB-dən tap
+    const otpDoc = await OTP.findOne({
+      userId,
+      vacancyId: id,
+      otp,
+      expiresAt: { $gt: Date.now() } // vaxtı keçməsin
+    });
+
+    if (!otpDoc) {
+      return res.status(400).json({ message: "OTP yanlışdır və ya vaxtı keçib ❌" });
+    }
+
+    // Vakansiyanı sil
+    const vacancy = await Vacancy.findOneAndDelete({
+      _id: id,
+      createdBy: userId,
+    });
+
+    if (!vacancy) {
+      return res.status(404).json({ message: "Vakansiya tapılmadı ❌" });
+    }
+
+    // OTP-ni sil (birdəfəlik istifadə üçün)
+    await OTP.deleteOne({ _id: otpDoc._id });
+
+    return res.status(200).json({ message: "Vakansiya uğurla silindi ✅" });
+
+  } catch (error) {
+    console.error("deleteUserVacancyWithOtp error:", error);
+    return res.status(500).json({ message: "Server xətası" });
+  }
+};

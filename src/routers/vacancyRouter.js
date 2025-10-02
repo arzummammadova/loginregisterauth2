@@ -1,4 +1,4 @@
-import { approveVacancy, deleteVacancyAll, deleteVacancyById, editVacancy, getVacancy, getVacancyById, getVacancyBySlug, postVacancy, rejectVacancy } from "../controllers/vacancyController.js"
+import { approveVacancy,  deleteUserVacancyWithOtp,  deleteVacancyAll, deleteVacancyById, editVacancy, getUserVacancies, getVacancy, getVacancyById, getVacancyBySlug, postVacancy, rejectVacancy, requestVacancyDelete } from "../controllers/vacancyController.js"
 import express from "express"
 import authMiddleware from "../middleware/authMiddleware.js";
 import { isAdmin } from "../middleware/isAdmin.js";
@@ -20,5 +20,15 @@ vacancyrouter.get('/id/:id',getVacancyById)
 vacancyrouter.delete('/',isAdmin,deleteVacancyAll)
 vacancyrouter.delete('/:id',authMiddleware,isAdmin,deleteVacancyById)
 vacancyrouter.put('/:id', authMiddleware, editVacancy); 
+
+vacancyrouter.get("/user/user", authMiddleware, getUserVacancies);
 vacancyrouter.get('/:slug', getVacancyBySlug);
+
+
+// Vakansiya silmək üçün OTP istəyi göndərilir
+vacancyrouter.post('/:id/request-delete', authMiddleware, requestVacancyDelete);
+
+// OTP ilə təsdiq edildikdən sonra silinir
+vacancyrouter.post('/:id/confirm-delete', authMiddleware, deleteUserVacancyWithOtp);
+
 export  default vacancyrouter
