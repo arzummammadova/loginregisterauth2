@@ -11,6 +11,40 @@ const UserSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    bio:{
+      type:String,
+      required:false,
+      default: "Bio is not available"
+
+    },
+     userprofile: {
+      type:String,
+      required:false,
+
+    },
+    userLocation:{
+      type:String,
+      required:false,
+      default:"No Location"
+    },
+   userImage: {
+  type: String,
+  default: ""
+}
+,
+    userCover:{
+      type:String,
+      required:false,
+      default:""
+    },
+    followers: {
+      type: Array
+
+    },
+    viewCount: {
+      type:Number,
+      default: 0,
+    },
     password: {
       type: String,
       // Yalnız Google ilə qeydiyyatdan keçməyən istifadəçilər üçün şifrə tələb olunur

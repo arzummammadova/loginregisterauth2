@@ -93,8 +93,6 @@ export const verifyEmail = async (req, res) => {
     return res.status(500).json({ message: "Server error", error });
   }
 };
-
-
 export const login = async (req, res) => {
   try {
     const { error } = loginValidation.validate(req.body);
@@ -327,8 +325,6 @@ export const setPassword = async (req, res) => {
     return res.status(500).json({ message: "Server xətası", error: error.message });
   }
 };
-
-
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -407,5 +403,6 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Xəta baş verdi" });
   }
 };
+
 
 

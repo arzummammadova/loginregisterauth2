@@ -44,8 +44,6 @@ export const getVacancy = async (req, res) => {
     });
   }
 };
-
-
 export const getVacancyById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -259,7 +257,7 @@ export const getVacancyBySlug = async (req, res) => {
     });
   }
 };
-// vacancyController.js - debug version
+
 export const rejectVacancy = async (req, res) => {
   try {
     const { id } = req.params;
@@ -397,9 +395,7 @@ export const editVacancy = async (req, res) => {
   }
 };
 
-// vacancyController.js faylına əlavə et
 
-// ✅ DÜZƏLDİLMİŞ postVacancy
 export const postVacancy = async (req, res) => {
   try {
     // Array-ləri və companyInfo-nu parse et
@@ -499,7 +495,7 @@ export const postVacancy = async (req, res) => {
   }
 };
 
-// ✅ DÜZƏLDİLMİŞ getUserVacancies
+
 export const getUserVacancies = async (req, res) => {
   try {
     const userId = req.user._id; // ✅ _id istifadə et
@@ -565,46 +561,6 @@ export const getUserVacancies = async (req, res) => {
   }
 };
 
-// vacancyController.js faylına əlavə et
-
-// export const deleteUserVacancy = async (req, res) => {
-//   try {
-//     const { id } = req.params; // Silinəcək vakansiyanın ID-si
-//     const userId = req.user._id; // Cari istifadəçinin ID-si
-
-//     if (!userId) {
-//       return res.status(401).json({ message: "İcazə yoxdur. Zəhmət olmasa daxil olun. ❌" });
-//     }
-
-//     // Vakansiyanı tap və yoxla ki, həqiqətən də bu istifadəçi tərəfindən yaradılıb
-//     const vacancy = await Vacancy.findOneAndDelete({
-//       _id: id,
-//       createdBy: userId,
-//     });
-
-//     if (!vacancy) {
-//       // Vakansiya tapılmayıbsa VƏ YA `createdBy` cari istifadəçi deyilsə
-//       const existingVacancy = await Vacancy.findById(id);
-//       if (!existingVacancy) {
-//          return res.status(404).json({ message: "Vakansiya tapılmadı ❌" });
-//       } else {
-//          return res.status(403).json({ message: "Bu vakansiyanı silməyə icazəniz yoxdur ❌" });
-//       }
-//     }
-
-//     return res.status(200).json({ message: "Vakansiya uğurla silindi ✅" });
-
-//   } catch (error) {
-//     console.error("deleteUserVacancy error:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Server xətası, vakansiya silinə bilmədi",
-//       error: error.message,
-//     });
-//   }
-// };
-
-
 export const requestVacancyDelete = async (req, res) => {
   try {
     const { id } = req.params;
@@ -646,7 +602,6 @@ export const requestVacancyDelete = async (req, res) => {
   }
 };
 
-
 export const deleteUserVacancyWithOtp = async (req, res) => {
   try {
     const { id } = req.params; // vakansiya id
@@ -685,3 +640,5 @@ export const deleteUserVacancyWithOtp = async (req, res) => {
     return res.status(500).json({ message: "Server xətası" });
   }
 };
+
+

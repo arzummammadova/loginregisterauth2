@@ -3,7 +3,6 @@
 import User from "../models/authModel.js";
 
 
-
 //admin panel
 export const getAllUsers = async (req, res) => {
   try {

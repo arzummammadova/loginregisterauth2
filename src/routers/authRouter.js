@@ -14,163 +14,21 @@ import User from "../models/authModel.js";
 
 
 import authMiddleware from "../middleware/authMiddleware.js"; 
+import { upload } from "../config/cloudinary.js";
 
 const router = express.Router();
-/**
- * @swagger
- * /auth/register:
- *   post:
- *     summary: Yeni istifadəçi qeydiyyatı
- *     tags:
- *       - Auth
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - username
- *               - email
- *               - password
- *             properties:
- *               username:
- *                 type: string
- *                 example: arzu
- *               email:
- *                 type: string
- *                 format: email
- *                 example: arzu@example.com
- *               password:
- *                 type: string
- *                 format: password
- *                 example: myStrongPassword123@
- *     responses:
- *       201:
- *         description: User created. Email verification sent.
- *         content:
- *           application/json:
- *             example:
- *               message: "User created. Please verify your email"
- *       400:
- *         description: Validation error or user already exists
- *         content:
- *           application/json:
- *             example:
- *               message: "User already exists"
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             example:
- *               message: "Server error"
- */
 router.post("/register", register);
 router.get("/verify-email", verifyEmail);
-/**
- * @swagger
- * /auth/login:
- *   post:
- *     summary: User login
- *     description: Authenticate a user with username/email and password. Handles Google accounts without passwords and account lock logic.
- *     tags:
- *       - Auth
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - user
- *               - password
- *             properties:
- *               user:
- *                 type: string
- *                 description: Username or email
- *                 example: user@example.com
- *               password:
- *                 type: string
- *                 description: User password
- *                 example: password123
- *     responses:
- *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Login successful
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                       example: 64f8e1d3c2b3a4567d8f9e12
- *                     username:
- *                       type: string
- *                       example: john_doe
- *                     email:
- *                       type: string
- *                       example: user@example.com
- *                     role:
- *                       type: string
- *                       example: user
- *       400:
- *         description: Validation error or incorrect credentials / Google account without password
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: İstifadəçi tapılmadı
- *       403:
- *         description: Account temporarily locked
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Hesabınız müvəqqəti bloklanıb. Zəhmət olmasa 15 dəqiqə sonra yenidən cəhd edin.
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Server xətası
- *                 error:
- *                   type: string
- *                   example: Error details
- */
 
 router.post("/login", login);
 router.post("/logout", logout);
 const debugCookies = (req, res, next) => {
-  // console.log('🍪 Cookies received:', req.cookies);
-  // console.log('📱 User-Agent:', req.headers['user-agent']);
-  // console.log('🌍 Origin:', req.headers.origin);
+  
   next();
 };
 
 router.use('/me', debugCookies);
-// Yeni 'me' endpointi
-// router.get("/me", authMiddleware, (req, res) => {
-//     // authMiddleware-i keçdikdən sonra req.user obyekti mövcud olacaq
-//     return res.status(200).json({
-//       user: req.user,
-//     });
-// });
+
 
 router.get("/me", authMiddleware, async (req, res) => {
   try {
@@ -227,59 +85,49 @@ router.post("/forgot-password", forgotPassword);
 // router.post("/reset-password", resetPassword);
 router.post("/reset-password/:id/:token", resetPassword);
 
+router.put(
+  "/edit-profile",
+  authMiddleware,
+  upload.single("userImage"),
+  async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const updates = { ...req.body };
 
-/**
- * @swagger
- * /auth/reset-password:
- *   post:
- *     summary: İstifadəçi şifrəsini yeniləyir
- *     tags:
- *       - Auth
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - id
- *               - token
- *               - password
- *             properties:
- *               id:
- *                 type: string
- *                 example: 64f8e1d3c2b3a4567d8f9e12
- *               token:
- *                 type: string
- *                 example: 123456abcdef
- *               password:
- *                 type: string
- *                 example: NewStrongPassword123!
- *     responses:
- *       200:
- *         description: Şifrə uğurla yeniləndi
- *         content:
- *           application/json:
- *             example:
- *               message: "Şifrə uğurla yeniləndi"
- *       400:
- *         description: Token etibarsızdır və ya vaxtı keçib
- *         content:
- *           application/json:
- *             example:
- *               message: "Token etibarsızdır və ya vaxtı keçib"
- *       500:
- *         description: Server xətası
- *         content:
- *           application/json:
- *             example:
- *               message: "Server xətası"
- */
+      if ("email" in updates) delete updates.email;
 
+      // Multer və ya Cloudinary faylı düzgün gəlirsə
+      if (req.file && req.file.path) {
+        updates.userImage = String(req.file.path);
+      } else {
+        delete updates.userImage; // boş obyekt göndərməmək üçün
+      }
 
+      // Obyektləri sil
+      Object.keys(updates).forEach(key => {
+        if (typeof updates[key] === "object" && !Array.isArray(updates[key])) {
+          delete updates[key];
+        }
+      });
 
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
-//admin-panel users
+      Object.keys(updates).forEach(update => {
+        user[update] = updates[update];
+      });
+
+      await user.save();
+
+      res.status(200).json({ message: "Profile updated successfully", user });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Failed to update profile", error: error.message });
+    }
+  }
+);
 
 
 

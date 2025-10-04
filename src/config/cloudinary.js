@@ -8,6 +8,14 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const cvStorage=new CloudinaryStorage({
+  cloudinary,
+  params:{folder:"cv_pdf",
+  allowed_formats:["pdf","dosc","doc"]},
+  resource_type: "raw", // PDF və digər fayllar üçün
+
+
+})
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -17,3 +25,7 @@ const storage = new CloudinaryStorage({
 });
 
 export const upload = multer({ storage });
+export const uploadCV = multer({ 
+  storage: cvStorage,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
