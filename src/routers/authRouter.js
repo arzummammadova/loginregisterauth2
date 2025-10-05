@@ -15,6 +15,7 @@ import User from "../models/authModel.js";
 
 import authMiddleware from "../middleware/authMiddleware.js"; 
 import { upload } from "../config/cloudinary.js";
+import { uploadUserProfile } from "../config/multer.js";
 
 const router = express.Router();
 router.post("/register", register);
@@ -88,47 +89,72 @@ router.post("/reset-password/:id/:token", resetPassword);
 router.put(
   "/edit-profile",
   authMiddleware,
-  upload.single("userImage"),
+  uploadUserProfile.single("userImage"), // uploadUserProfile istifadə edin
   async (req, res) => {
     try {
-      const userId = req.user.id;
-      const updates = { ...req.body };
+      console.log("=== EDIT PROFILE REQUEST ===");
+      console.log("User ID:", req.user?.id);
+      console.log("req.body:", JSON.stringify(req.body, null, 2));
+      console.log("req.file:", req.file);
+      console.log("========================");
 
-      if ("email" in updates) delete updates.email;
-
-      // Multer və ya Cloudinary faylı düzgün gəlirsə
-      if (req.file && req.file.path) {
-        updates.userImage = String(req.file.path);
-      } else {
-        delete updates.userImage; // boş obyekt göndərməmək üçün
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
       }
 
-      // Obyektləri sil
-      Object.keys(updates).forEach(key => {
-        if (typeof updates[key] === "object" && !Array.isArray(updates[key])) {
-          delete updates[key];
-        }
-      });
-
+      // Find user first
       const user = await User.findById(userId);
+      
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      Object.keys(updates).forEach(update => {
-        user[update] = updates[update];
-      });
+      // Update fields manually (safest approach)
+      if (req.body.username) {
+        const username = String(req.body.username).trim();
+        if (username) user.username = username;
+      }
+      
+      if (req.body.bio !== undefined) {
+        user.bio = String(req.body.bio || '').trim();
+      }
+      
+      if (req.body.userLocation) {
+        const location = String(req.body.userLocation).trim();
+        if (location) user.userLocation = location;
+      }
 
+      if (req.file?.path) {
+        user.userImage = String(req.file.path);
+      }
+
+      // Save the user
       await user.save();
 
-      res.status(200).json({ message: "Profile updated successfully", user });
+      // Return user without password
+      const userResponse = user.toObject();
+      delete userResponse.password;
+
+      console.log("✅ Profile updated successfully");
+
+      res.status(200).json({ 
+        message: "Profile updated successfully", 
+        user: userResponse
+      });
+
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Failed to update profile", error: error.message });
+      console.error("❌ Edit profile error:", error.message);
+      console.error("Stack:", error.stack);
+      
+      res.status(500).json({ 
+        message: "Failed to update profile", 
+        error: error.message
+      });
     }
   }
 );
-
 
 
 
