@@ -47,20 +47,49 @@ export const getVacancy = async (req, res) => {
 export const getVacancyById = async (req, res) => {
   try {
     const { id } = req.params;
-    const vacancy = await Vacancy.findById(id);
+    
+    const vacancy = await Vacancy.findById(id)
+      .populate('createdBy', 'username email userImage userLocation bio createdAt viewCount');
 
     if (!vacancy) {
-      return res.status(404).json({ message: "Vacancy not found ❌" });
+      return res.status(404).json({ 
+        success: false,
+        message: "Vacancy not found" 
+      });
     }
 
-    return res.status(200).json(vacancy);
+    return res.status(200).json({
+      success: true,
+      data: {
+        vacancy,
+        creator: vacancy.createdBy
+      }
+    });
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: "Internal server error",
       error: error.message,
     });
   }
 };
+// export const getVacancyById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const vacancy = await Vacancy.findById(id);
+
+//     if (!vacancy) {
+//       return res.status(404).json({ message: "Vacancy not found ❌" });
+//     }
+
+//     return res.status(200).json(vacancy);
+//   } catch (error) {
+//     return res.status(500).json({
+//       message: "Internal server error",
+//       error: error.message,
+//     });
+//   }
+// };
 export const deleteVacancyAll = async (req, res) => {
   try {
     const result = await Vacancy.deleteMany();
@@ -90,122 +119,7 @@ export const deleteVacancyById = async (req, res) => {
     return res.status(500).json({ message: "Server error ❌" });
   }
 };
-// export const postVacancy = async (req, res) => {
-//   try {
-//     // Array-ləri və companyInfo-nu parse et (FormData-dan string gəlir)
-//     const requirements = req.body.requirements ? JSON.parse(req.body.requirements) : [];
-//     const responsibilities = req.body.responsibilities ? JSON.parse(req.body.responsibilities) : [];
-//     const benefits = req.body.benefits ? JSON.parse(req.body.benefits) : [];
-//     const tags = req.body.tags ? JSON.parse(req.body.tags) : [];
-//     const languages = req.body.languages ? JSON.parse(req.body.languages) : [];
-//     const companyInfo = req.body.companyInfo ? JSON.parse(req.body.companyInfo) : {};
 
-//     // Boolean dəyərləri düzgün parse et
-//     const featured = req.body.featured === 'true';
-//     const urgent = req.body.urgent === 'true';
-
-//     const {
-//       title,
-//       org,
-//       deadline,
-//       location,
-//       category,
-//       type,
-//       workplace,
-//       paymentType,
-//       salary,
-//       experience,
-//       education,
-//       description,
-//       applicationMethod = "internal",
-//       applicationEmail,
-//       externalApplicationUrl,
-//       contractType,
-//       ageRange,
-//       metaDescription,
-//       eventType,
-//     } = req.body;
-
-//     const logo = req.file ? req.file.path : null;
-
-//     // Validation
-//     if (!title || !org || !location || !category || !type || !workplace || !paymentType || !experience || !education || !description || !companyInfo?.name || !eventType) {
-//       return res.status(400).json({ message: "Zəruri sahələr doldurulmalıdır" });
-//     }
-
-//     if (paymentType === "paid" && !salary) {
-//       return res.status(400).json({ message: "Ödənişli iş üçün maaş göstərilməlidir" });
-//     }
-
-//     const newVacancy = new Vacancy({
-//       logo,
-//       title,
-//       org,
-//       postedTime: new Date(),
-//       deadline: deadline ? new Date(deadline) : null,
-//       location,
-//       category,
-//       type,
-//       workplace,
-//       paymentType,
-//       salary: paymentType === "paid" ? salary : null,
-//       views: 0,
-//       applicants: 0,
-//       featured,
-//       urgent,
-//       experience,
-//       education,
-//       description,
-//       requirements,
-//       responsibilities,
-//       benefits,
-//       tags,
-//       companyInfo,
-//       slug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now(),
-//       metaDescription: metaDescription || description.substring(0, 160),
-//       status: "active",
-//       isApproved: null,
-//       applicationMethod,
-//       applicationEmail,
-//       externalApplicationUrl,
-//       contractType,
-//       languages,
-//       ageRange,
-//       eventType,
-//       createdBy: req.user?.id || req.user?._id || null,
-//     });
-
-//     const savedVacancy = await newVacancy.save();
-
-//     // Admin email göndər
-//     try {
-//       await transporter.sendMail({
-//         from: process.env.EMAIL_USER,
-//         replyTo: req.user?.email,
-//         to: process.env.ADMIN_EMAIL,
-//         subject: "Yeni vakansiya əlavə olundu - Təsdiq gözləyir",
-//         html: `
-//           <h2>Yeni vakansiya təsdiq gözləyir</h2>
-//           <p><strong>Başlıq:</strong> ${savedVacancy.title}</p>
-//           <p><strong>Şirkət:</strong> ${savedVacancy.org}</p>
-//           <p><strong>Kateqoriya:</strong> ${savedVacancy.category}</p>
-//           <p><strong>Lokasiya:</strong> ${savedVacancy.location}</p>
-//         `,
-//       });
-//     } catch (err) {
-//       console.error("Email error:", err.message);
-//     }
-
-//     return res.status(201).json({
-//       success: true,
-//       message: "Vakansiya əlavə olundu ✅ (admin təsdiqi gözləyir)",
-//       data: savedVacancy,
-//     });
-//   } catch (error) {
-//     console.error("Vacancy yaratmaqda xəta:", error);
-//     return res.status(500).json({ success: false, message: "Server xətası", error: error.message });
-//   }
-// };
 export const approveVacancy = async (req, res) => {
   try {
     const { id } = req.params;
@@ -227,36 +141,103 @@ export const approveVacancy = async (req, res) => {
 export const getVacancyBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
-
+    
     const vacancy = await Vacancy.findOne({ slug })
-      .populate('createdBy', 'name email')
-      .populate('relatedJobs', 'title org salary slug')
-      .exec();
+      .populate('createdBy', 'username email userImage userLocation bio createdAt viewCount');
 
     if (!vacancy) {
       return res.status(404).json({
         success: false,
-        message: "Vakansiya tapılmadı"
+        message: "Vakansiya tapılmadı",
       });
     }
 
-    // Views sayını artır (asynchronous)
-    vacancy.incrementViews().catch(console.error);
+    vacancy.views += 1;
+    await vacancy.save();
 
     return res.status(200).json({
       success: true,
-      data: { vacancy }
+      data: {
+        vacancy,
+        creator: vacancy.createdBy // ✅ Bu indi null olmayacaq
+      },
     });
-
   } catch (error) {
-    console.error("Vakansiya məlumatlarını almaqda xəta:", error);
+    console.error("getVacancyBySlug error:", error);
     return res.status(500).json({
       success: false,
       message: "Server xətası",
-      error: error.message
+      error: error.message,
     });
   }
 };
+// export const getVacancyBySlug = async (req, res) => {
+//   try {
+//     const { slug } = req.params;
+    
+//     const vacancy = await Vacancy.findOne({ slug })
+//       .populate('createdBy', 'username email userImage userLocation bio createdAt viewCount');
+
+//     if (!vacancy) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Vakansiya tapılmadı",
+//       });
+//     }
+
+//     // Baxış sayını artır
+//     vacancy.views += 1;
+//     await vacancy.save();
+
+//     return res.status(200).json({
+//       success: true,
+//       data: {
+//         vacancy,
+//         creator: vacancy.createdBy // İstifadəçi məlumatları
+//       },
+//     });
+//   } catch (error) {
+//     console.error("getVacancyBySlug error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server xətası",
+//       error: error.message,
+//     });
+//   }
+// };
+// export const getVacancyBySlug = async (req, res) => {
+//   try {
+//     const { slug } = req.params;
+
+//     const vacancy = await Vacancy.findOne({ slug })
+//       .populate('createdBy', 'name email')
+//       .populate('relatedJobs', 'title org salary slug')
+//       .exec();
+
+//     if (!vacancy) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Vakansiya tapılmadı"
+//       });
+//     }
+
+//     // Views sayını artır (asynchronous)
+//     vacancy.incrementViews().catch(console.error);
+
+//     return res.status(200).json({
+//       success: true,
+//       data: { vacancy }
+//     });
+
+//   } catch (error) {
+//     console.error("Vakansiya məlumatlarını almaqda xəta:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server xətası",
+//       error: error.message
+//     });
+//   }
+// };
 
 export const rejectVacancy = async (req, res) => {
   try {
