@@ -9,6 +9,7 @@ import cors from 'cors';
 import swaggerDocs from './src/config/swagger.js';
 import vacancyrouter from './src/routers/vacancyRouter.js';
 import adminRouter from './src/routers/adminRouter.js';
+import applicationRouter from './src/routers/applicationRouter.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -89,6 +90,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', router);
 app.use('/api/vacancy',vacancyrouter)
 app.use('/api/admin',adminRouter)
+app.use('/api/applications',applicationRouter)
 
 swaggerDocs(app);
 
