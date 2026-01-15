@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 5000;
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000" ;
 // const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:3000" ];
- const allowedOrigins = ["http://localhost:5500" || "http://localhost:3000" ];
+ const allowedOrigins = ["http://127.0.0.1:5500" || "http://localhost:3000" ];
 // app.use(cors({
 //   origin: CLIENT_URL, // Yalnız bu URL-dən gələn sorğulara icazə ver
 //   credentials: true, // Sorğularla birlikdə çerezlərin (cookies) göndərilməsinə icazə ver
