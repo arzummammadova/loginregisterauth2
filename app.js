@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 5000;
 
 const CLIENT_URL = "https://estore-mauve.vercel.app"|| "http://localhost:3000" ;
 // const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:3000" ];
- const allowedOrigins = ["https://estore-mauve.vercel.app" || "http://localhost:3000" ];
+ const allowedOrigins = ["https://estore-mauve.vercel.app" || "http://localhost:3000"  || "127.0.0.1:5500"];
 // app.use(cors({
 //   origin: CLIENT_URL, // Yalnız bu URL-dən gələn sorğulara icazə ver
 //   credentials: true, // Sorğularla birlikdə çerezlərin (cookies) göndərilməsinə icazə ver
@@ -39,7 +39,9 @@ const corsOptions = {
       'http://localhost:3000', 
       'http://localhost:3001',
       'https://volunternaz.vercel.app',
-      process.env.CLIENT_URL
+     'https://estore-mauve.vercel.app/',
+     '127.0.0.1:5500'
+         process.env.CLIENT_URL
     ].filter(Boolean);
 
     if (process.env.NODE_ENV !== 'production' && !origin) {
